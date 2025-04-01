@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  admin:
+    build: 
+      context: ./Ballot_System_AdminV2
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    env_file:
+      - ./Ballot_System_AdminV2/.env
+    volumes:
+      - ./Ballot_System_AdminV2/app:/var/www/html/app
+      - ./Ballot_System_AdminV2/config:/var/www/html/config
+      - ./Ballot_System_AdminV2/database:/var/www/html/database
+      - ./Ballot_System_AdminV2/resources:/var/www/html/resources
+      - ./Ballot_System_AdminV2/routes:/var/www/html/routes
+      - ./Ballot_System_AdminV2/storage:/var/www/html/storage
+    networks:
+      - ballot-network
+    depends_on:
+      - db
+
+  voter:
+    build:
+      context: ./Ballot_System_VoterV2
+      dockerfile: Dockerfile
+    ports:
+      - "8000:80"
+    env_file:
+      - ./Ballot_System_VoterV2/.env
+    volumes:
+      - ./Ballot_System_VoterV2/app:/var/www/html/app
+      - ./Ballot_System_VoterV2/config:/var/www/html/config
+      - ./Ballot_System_VoterV2/database:/var/www/html/database
+      - ./Ballot_System_VoterV2/resources:/var/www/html/resources
+      - ./Ballot_System_VoterV2/routes:/var/www/html/routes
+      - ./Ballot_System_VoterV2/storage:/var/www/html/storage
+    networks:
+      - ballot-network
+    depends_on:
+      - db
+
+  db:
+    container_name: mysql_db
+    image: mysql:5.7.42
+    restart: always
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: ballot_system
+      MYSQL_USER: ballot_user
+      MYSQL_PASSWORD: ballot_password
+    command: 
+      - --default-authentication-plugin=mysql_native_password
+      - --skip-grant-tables
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - ballot-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-proot_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  ballot-network:
+    driver: bridge
+
+volumes:
+  db-data:
