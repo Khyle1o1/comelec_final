@@ -19,7 +19,7 @@ services:
     networks:
       - ballot-network
     depends_on:
-      - db
+      - mysql
 
   voter:
     build:
@@ -39,35 +39,26 @@ services:
     networks:
       - ballot-network
     depends_on:
-      - db
+      - mysql
 
-  db:
-    container_name: mysql_db
-    image: mysql:5.7.42
-    restart: always
+  mysql:
+    image: mysql:latest
+    container_name: mysql_docker
     ports:
-      - "3307:3306"
+      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: ballot_system
+      MYSQL_DATABASE: ballot_system_adminv2
       MYSQL_USER: ballot_user
       MYSQL_PASSWORD: ballot_password
-    command: 
-      - --default-authentication-plugin=mysql_native_password
-      - --skip-grant-tables
     volumes:
       - db-data:/var/lib/mysql
+      - ./sql/ballot_system_adminv2.sql:/docker-entrypoint-initdb.d/ballot_system_adminv2.sql
     networks:
       - ballot-network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-proot_password"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
 networks:
-  ballot-network:
-    driver: bridge
+  ballot-network: {}
 
 volumes:
-  db-data:
+  db-data: {}
